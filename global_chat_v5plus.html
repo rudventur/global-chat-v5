@@ -859,9 +859,12 @@ select option { background: #0d0520; }
     <div class="preview-col">
       <div class="preview-header">
         <span>✦ LIVE PREVIEW</span>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:6px;align-items:center;">
           <span id="charCount" style="font-size:0.7rem;color:var(--text2);">0 chars</span>
           <button class="copy-btn" onclick="copyPrompt()" id="copyBtn">📋 COPY</button>
+          <button class="copy-btn" onclick="savePromptToFile()" title="Save prompt as .txt file">💾 SAVE</button>
+          <button class="copy-btn" onclick="document.getElementById('loadPromptFile').click()" title="Load prompt from file">📂 LOAD</button>
+          <input type="file" id="loadPromptFile" accept=".txt,.md,.json" style="display:none" onchange="loadPromptFromFile(event)">
         </div>
       </div>
 
@@ -1218,6 +1221,31 @@ function copyPrompt() {
     showToast('📋 Copied to clipboard!');
     setTimeout(() => { btn.textContent = '📋 COPY'; btn.classList.remove('copied'); }, 2000);
   });
+}
+
+function savePromptToFile() {
+  if (!builtPrompt) { showToast('⚠️ Build a prompt first!'); return; }
+  const blob = new Blob([builtPrompt], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rudventur-prompt-' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('💾 Prompt saved to file!');
+}
+
+function loadPromptFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    builtPrompt = e.target.result;
+    document.getElementById('promptPreview').textContent = builtPrompt;
+    document.getElementById('charCount').textContent = builtPrompt.length + ' chars';
+    showToast('📂 Prompt loaded from file!');
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be loaded again
 }
 
 function sendToAI(ai) {
