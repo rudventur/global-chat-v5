@@ -799,6 +799,33 @@ select option { background: #0d0520; }
   transition: all 0.2s;
 }
 .settings-clear-btn:hover { background: rgba(255,80,80,0.1); box-shadow: 0 0 12px rgba(255,80,80,0.3); }
+
+/* ── MAXIMIZE BUTTON ── */
+.max-btn {
+  background: transparent;
+  border: 1px solid rgba(155,48,255,0.3);
+  border-radius: 4px;
+  color: var(--text2);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: all 0.2s;
+  margin-left: 6px;
+}
+.max-btn:hover { border-color: var(--p3); color: var(--p3); box-shadow: 0 0 8px var(--glow2); }
+
+/* Maximized panel states */
+.main.maximized-builder .preview-col,
+.main.maximized-builder .live-col { display: none; }
+.main.maximized-builder .builder { width: 100%; border-right: none; }
+
+.main.maximized-preview .builder,
+.main.maximized-preview .live-col { display: none; }
+.main.maximized-preview .preview-col { border-right: none; }
+
+.main.maximized-live .builder,
+.main.maximized-live .preview-col { display: none; }
+.main.maximized-live .live-col { width: 100%; }
 </style>
 </head>
 <body>
@@ -839,7 +866,10 @@ select option { background: #0d0520; }
 
     <!-- ═══ LEFT: BUILDER ═══ -->
     <div class="builder">
-      <div class="builder-header">✦ PROMPT ARCHITECT</div>
+      <div class="builder-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>✦ PROMPT ARCHITECT</span>
+        <button class="max-btn" onclick="toggleMax('builder')" title="Maximize">⤢</button>
+      </div>
 
       <div class="cat-tabs">
         <button class="cat-tab active" onclick="setCategory('science')" id="tab-science">⚛️ SCIENCE</button>
@@ -858,7 +888,7 @@ select option { background: #0d0520; }
     <!-- ═══ CENTER: PREVIEW ═══ -->
     <div class="preview-col">
       <div class="preview-header">
-        <span>✦ LIVE PREVIEW</span>
+        <span>✦ LIVE PREVIEW <button class="max-btn" onclick="toggleMax('preview')" title="Maximize">⤢</button></span>
         <div style="display:flex;gap:6px;align-items:center;">
           <span id="charCount" style="font-size:0.7rem;color:var(--text2);">0 chars</span>
           <button class="copy-btn" onclick="copyPrompt()" id="copyBtn">📋 COPY</button>
@@ -894,6 +924,7 @@ select option { background: #0d0520; }
         <div class="tab-btn active" id="tab-global" onclick="switchTab(0)">🌍 GLOBAL</div>
         <div class="tab-btn"        id="tab-claude" onclick="switchTab(1)">💜 CLAUDE</div>
         <div class="tab-btn"        id="tab-grok"   onclick="switchTab(2)">🤖 GROK</div>
+        <button class="max-btn" onclick="toggleMax('live')" title="Maximize" style="margin:auto 6px auto 0;">⤢</button>
       </div>
 
       <!-- ── GLOBAL CHAT PANEL ── -->
@@ -1493,6 +1524,21 @@ function switchTab(n) {
   const tabs = ['tab-global', 'tab-claude', 'tab-grok'];
   panels.forEach((id, i) => document.getElementById(id).classList.toggle('active', n === i));
   tabs.forEach((id, i) => document.getElementById(id).classList.toggle('active', n === i));
+}
+
+// ════════════════════════════════════════════════════
+//  MAXIMIZE PANELS
+// ════════════════════════════════════════════════════
+function toggleMax(panel) {
+  const main = document.querySelector('.main');
+  const cls = 'maximized-' + panel;
+  if (main.classList.contains(cls)) {
+    main.classList.remove(cls);
+  } else {
+    // Remove any other maximized state first
+    main.classList.remove('maximized-builder', 'maximized-preview', 'maximized-live');
+    main.classList.add(cls);
+  }
 }
 
 // ════════════════════════════════════════════════════
