@@ -921,6 +921,7 @@ select option { background: #0d0520; }
           <div class="chat-actions">
             <button class="send-chat-btn" onclick="sendToClaudeLive()" id="sendBtn">⚡ SEND</button>
             <button class="use-prompt-btn" onclick="useBuiltPrompt()">USE PROMPT ↑</button>
+            <button class="use-prompt-btn" onclick="clearClaudeChat()" style="border-color:rgba(255,80,80,0.4);color:#ff6b6b;">🗑️ CLEAR</button>
           </div>
           <div class="token-info" id="tokenInfo">Ready · Powered by Claude Sonnet</div>
         </div>
@@ -941,6 +942,7 @@ select option { background: #0d0520; }
             <button class="send-chat-btn" onclick="sendToGrokLive()" id="grokSendBtn"
               style="background:linear-gradient(135deg,#001a33,#003366);border-color:var(--grok);color:var(--grok);">🤖 SEND</button>
             <button class="use-prompt-btn" onclick="useBuiltPromptGrok()">USE PROMPT ↑</button>
+            <button class="use-prompt-btn" onclick="clearGrokChat()" style="border-color:rgba(255,80,80,0.4);color:#ff6b6b;">🗑️ CLEAR</button>
           </div>
           <div class="token-info" id="grokTokenInfo" style="color:rgba(0,212,255,0.4);">Ready · Powered by Grok</div>
         </div>
@@ -1321,6 +1323,23 @@ function addGrokMessage(type, text) {
   return el;
 }
 
+// ── Clear Chat functions ──
+function clearClaudeChat() {
+  chatHistory = [];
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = '<div class="msg system">🌌 Chat cleared — fresh start! ⚡</div>';
+  document.getElementById('tokenInfo').textContent = 'Ready · Powered by Claude Sonnet';
+  showToast('💜 Claude chat cleared!');
+}
+
+function clearGrokChat() {
+  grokHistory = [];
+  const msgs = document.getElementById('grokMessages');
+  msgs.innerHTML = '<div class="msg system">🤖 Chat cleared — fresh start! ⚡</div>';
+  document.getElementById('grokTokenInfo').textContent = 'Ready · Powered by Grok';
+  showToast('🤖 Grok chat cleared!');
+}
+
 async function sendToGrokLive() {
   const grokKey = localStorage.getItem('grokApiKey');
   if (!grokKey) {
@@ -1515,6 +1534,7 @@ function sendGlobalMessage() {
     sessionId: sessionId
   });
   input.value = '';
+  input.focus();
 }
 
 function sendBuiltPromptToGlobal() {
