@@ -981,6 +981,15 @@ select option { background: #0d0520; }
         <button class="settings-save-btn" onclick="saveKeys()">💾 Save to this session</button>
         <button class="settings-clear-btn" onclick="clearKeys()">🗑️ Clear all keys</button>
       </div>
+      <div style="border-top:1px dashed rgba(155,48,255,0.3);padding-top:14px;margin-top:4px;">
+        <div class="field-label" style="margin-bottom:8px;">📦 SESSION DATA</div>
+        <div class="settings-actions">
+          <button class="settings-save-btn" onclick="exportSession()" style="font-size:0.75rem;">📤 Export Session</button>
+          <button class="settings-save-btn" onclick="document.getElementById('importSessionFile').click()" style="font-size:0.75rem;background:linear-gradient(135deg,#003366,#006699);">📥 Import Session</button>
+          <input type="file" id="importSessionFile" accept=".json" style="display:none" onchange="importSession(event)">
+        </div>
+        <div style="font-size:0.65rem;color:var(--text2);margin-top:6px;text-align:center;">Export saves chat history, prompt, and settings (not API keys)</div>
+      </div>
     </div>
   </div>
 </div>
@@ -1532,6 +1541,60 @@ function clearKeys() {
   document.getElementById('claudeKeyInput').placeholder = 'sk-ant-...';
   document.getElementById('grokKeyInput').placeholder = 'xai-...';
   showToast('🗑️ All API keys cleared!');
+}
+
+// ── Session export/import ──
+function exportSession() {
+  const session = {
+    version: 'v5.2',
+    timestamp: new Date().toISOString(),
+    activeCats: activeCats,
+    builtPrompt: builtPrompt,
+    chipExtras: chipExtras,
+    claudeHistory: chatHistory,
+    grokHistory: grokHistory,
+    username: document.getElementById('usernameInput').value
+  };
+  const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rudventur-session-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  closeSettingsModal();
+  showToast('📤 Session exported!');
+}
+
+function importSession(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const session = JSON.parse(e.target.result);
+      if (session.activeCats) { activeCats = session.activeCats; }
+      if (session.builtPrompt) {
+        builtPrompt = session.builtPrompt;
+        document.getElementById('promptPreview').textContent = builtPrompt;
+        document.getElementById('charCount').textContent = builtPrompt.length + ' chars';
+      }
+      if (session.chipExtras) { chipExtras = session.chipExtras; }
+      if (session.claudeHistory) { chatHistory = session.claudeHistory; }
+      if (session.grokHistory) { grokHistory = session.grokHistory; }
+      if (session.username) { document.getElementById('usernameInput').value = session.username; }
+      // Re-render tabs and template
+      document.querySelectorAll('.cat-tab').forEach(t => {
+        t.classList.toggle('active', activeCats.includes(t.id.replace('tab-', '')));
+      });
+      renderTemplate();
+      closeSettingsModal();
+      showToast('📥 Session imported! ⚡');
+    } catch (err) {
+      showToast('⚠️ Invalid session file');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 // Close modal on Escape key
