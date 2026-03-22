@@ -586,6 +586,23 @@ select option { background: #0d0520; }
   border: 1px dashed rgba(0,255,65,0.15);
 }
 
+.msg.grok-ai {
+  background: rgba(0,20,40,0.7);
+  border: 1px solid rgba(0,212,255,0.25);
+  color: #ccf0ff;
+  align-self: flex-start;
+  border-bottom-left-radius: 3px;
+}
+
+.msg.grok-thinking {
+  color: var(--text2);
+  font-style: italic;
+  font-size: 0.78rem;
+  align-self: flex-start;
+  background: rgba(0,10,25,0.5);
+  border: 1px dashed rgba(0,212,255,0.15);
+}
+
 /* Input areas */
 .chat-input-area {
   padding: 12px;
@@ -803,7 +820,10 @@ select option { background: #0d0520; }
     <button class="ai-btn live" onclick="scrollToChat()">
       <span class="live-dot"></span> CLAUDE LIVE
     </button>
-    <a class="ai-btn grok"  href="https://grok.com"           target="_blank">🤖 GROK</a>
+    <button class="ai-btn live" onclick="scrollToGrok()" style="border-color:var(--grok);color:var(--grok);animation:none;">
+      <span class="live-dot" style="background:var(--grok);"></span> GROK LIVE
+    </button>
+    <a class="ai-btn grok"  href="https://grok.com"           target="_blank">🤖 Grok.com</a>
     <a class="ai-btn gpt"   href="https://chatgpt.com"        target="_blank">🟢 ChatGPT</a>
     <a class="ai-btn meta"  href="https://meta.ai"            target="_blank">🔵 Meta AI</a>
     <a class="ai-btn zchat" href="https://z.chat"             target="_blank" id="zchatLink">⚡ z.chat</a>
@@ -864,8 +884,9 @@ select option { background: #0d0520; }
 
       <!-- Tab bar -->
       <div class="live-tab-bar">
-        <div class="tab-btn active" id="tab-global" onclick="switchTab(0)">🌍 GLOBAL CHAT</div>
-        <div class="tab-btn"        id="tab-claude" onclick="switchTab(1)">💜 CLAUDE LIVE</div>
+        <div class="tab-btn active" id="tab-global" onclick="switchTab(0)">🌍 GLOBAL</div>
+        <div class="tab-btn"        id="tab-claude" onclick="switchTab(1)">💜 CLAUDE</div>
+        <div class="tab-btn"        id="tab-grok"   onclick="switchTab(2)">🤖 GROK</div>
       </div>
 
       <!-- ── GLOBAL CHAT PANEL ── -->
@@ -902,6 +923,26 @@ select option { background: #0d0520; }
             <button class="use-prompt-btn" onclick="useBuiltPrompt()">USE PROMPT ↑</button>
           </div>
           <div class="token-info" id="tokenInfo">Ready · Powered by Claude Sonnet</div>
+        </div>
+      </div>
+
+      <!-- ── GROK LIVE PANEL ── -->
+      <div class="tab-panel" id="grok-panel">
+        <div class="chat-messages" id="grokMessages">
+          <div class="msg system">🤖 Grok Live — powered by xAI</div>
+          <div class="msg grok-ai">Hey! I'm Grok 🤖 Running inside Rudventur Global Chat — I love science, code, and creative chaos. What's on your mind? ⚡</div>
+        </div>
+
+        <div class="chat-input-area" style="border-color:rgba(0,212,255,0.2);background:rgba(0,5,15,0.6);">
+          <textarea id="grokInput" rows="3"
+            placeholder="Ask Grok anything... or click 'USE PROMPT ↑' to send your built prompt!"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendToGrokLive();}"></textarea>
+          <div class="chat-actions">
+            <button class="send-chat-btn" onclick="sendToGrokLive()" id="grokSendBtn"
+              style="background:linear-gradient(135deg,#001a33,#003366);border-color:var(--grok);color:var(--grok);">🤖 SEND</button>
+            <button class="use-prompt-btn" onclick="useBuiltPromptGrok()">USE PROMPT ↑</button>
+          </div>
+          <div class="token-info" id="grokTokenInfo" style="color:rgba(0,212,255,0.4);">Ready · Powered by Grok</div>
         </div>
       </div>
 
@@ -1174,6 +1215,11 @@ function scrollToChat() {
   document.getElementById('chatInput').focus();
 }
 
+function scrollToGrok() {
+  switchTab(2);
+  document.getElementById('grokInput').focus();
+}
+
 async function sendToClaudeLive() {
   const claudeKey = localStorage.getItem('claudeApiKey');
   if (!claudeKey) {
@@ -1253,13 +1299,106 @@ function addMessage(type, text) {
 }
 
 // ════════════════════════════════════════════════════
+//  GROK LIVE CHAT
+// ════════════════════════════════════════════════════
+let grokHistory = [];
+let grokThinking = false;
+
+function useBuiltPromptGrok() {
+  livePreview();
+  if (!builtPrompt) { showToast('⚠️ Build a prompt first!'); return; }
+  document.getElementById('grokInput').value = builtPrompt;
+  showToast('🤖 Prompt loaded into Grok chat!');
+}
+
+function addGrokMessage(type, text) {
+  const msgs = document.getElementById('grokMessages');
+  const el = document.createElement('div');
+  el.className = `msg ${type}`;
+  el.textContent = text;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+async function sendToGrokLive() {
+  const grokKey = localStorage.getItem('grokApiKey');
+  if (!grokKey) {
+    showToast('⚙️ Please add your Grok API key in settings first 🤖');
+    openSettingsModal();
+    return;
+  }
+
+  const input = document.getElementById('grokInput');
+  const msg = input.value.trim();
+  if (!msg || grokThinking) return;
+
+  input.value = '';
+  input.focus();
+  grokThinking = true;
+  document.getElementById('grokSendBtn').disabled = true;
+  document.getElementById('grokTokenInfo').textContent = 'Thinking... 🤖';
+
+  addGrokMessage('user', msg);
+  grokHistory.push({ role: 'user', content: msg });
+
+  const thinkEl = addGrokMessage('grok-thinking', '● ● ● thinking...');
+
+  try {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${grokKey}`
+      },
+      body: JSON.stringify({
+        model: 'grok-3-latest',
+        messages: [
+          {
+            role: 'system',
+            content: `You are Grok, running inside Rudy's Global Chat v5.2 — a grassroots micro-UNESCO multi-AI prompt hub with neon cyberpunk vibes. 🤖⚡
+You love science, physics, coding, creativity, memes, and building peace through open curious minds.
+Be helpful, warm, witty, and concise. You're the Grok Live panel — Claude, GPT, and Meta are also accessible here.`
+          },
+          ...grokHistory
+        ],
+        max_tokens: 4096
+      })
+    });
+
+    const data = await response.json();
+    thinkEl.remove();
+
+    if (data.choices && data.choices[0]) {
+      const reply = data.choices[0].message.content;
+      grokHistory.push({ role: 'assistant', content: reply });
+      addGrokMessage('grok-ai', reply);
+      const tokens = data.usage
+        ? `${data.usage.prompt_tokens}↑ ${data.usage.completion_tokens}↓ tokens`
+        : 'Ready';
+      document.getElementById('grokTokenInfo').textContent = tokens + ' · Grok ⚡';
+    } else if (data.error) {
+      addGrokMessage('system', '⚠️ ' + (data.error.message || 'Error connecting to Grok'));
+      document.getElementById('grokTokenInfo').textContent = 'Error — try again';
+    }
+  } catch (err) {
+    thinkEl.remove();
+    addGrokMessage('system', '⚠️ Connection error. Check network or API key.');
+    document.getElementById('grokTokenInfo').textContent = 'Offline';
+  }
+
+  grokThinking = false;
+  document.getElementById('grokSendBtn').disabled = false;
+}
+
+// ════════════════════════════════════════════════════
 //  TAB SWITCHING
 // ════════════════════════════════════════════════════
 function switchTab(n) {
-  document.getElementById('global-panel').classList.toggle('active', n === 0);
-  document.getElementById('claude-panel').classList.toggle('active', n === 1);
-  document.getElementById('tab-global').classList.toggle('active', n === 0);
-  document.getElementById('tab-claude').classList.toggle('active', n === 1);
+  const panels = ['global-panel', 'claude-panel', 'grok-panel'];
+  const tabs = ['tab-global', 'tab-claude', 'tab-grok'];
+  panels.forEach((id, i) => document.getElementById(id).classList.toggle('active', n === i));
+  tabs.forEach((id, i) => document.getElementById(id).classList.toggle('active', n === i));
 }
 
 // ════════════════════════════════════════════════════
