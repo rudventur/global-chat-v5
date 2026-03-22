@@ -1175,11 +1175,19 @@ function scrollToChat() {
 }
 
 async function sendToClaudeLive() {
+  const claudeKey = localStorage.getItem('claudeApiKey');
+  if (!claudeKey) {
+    showToast('⚙️ Please add your Claude API key in settings first ⚡');
+    openSettingsModal();
+    return;
+  }
+
   const input = document.getElementById('chatInput');
   const msg = input.value.trim();
   if (!msg || isThinking) return;
 
   input.value = '';
+  input.focus();
   isThinking = true;
   document.getElementById('sendBtn').disabled = true;
   document.getElementById('tokenInfo').textContent = 'Thinking... ⚡';
@@ -1192,14 +1200,19 @@ async function sendToClaudeLive() {
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': claudeKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system: `You are Claude, running inside Rudy's Global Chat v5.1plus — a multi-AI prompt hub with purple vibes and neon style. 
-You love science, physics, coding, and creative building. Be helpful, warm, enthusiastic, and concise. 
-If someone shares a prompt they built, help them improve it or just answer it. Keep responses focused and useful.
-You're the LIVE Claude panel — other AIs (Grok, GPT, Meta) are also accessible via the launcher buttons. ⚡`,
+        max_tokens: 4096,
+        system: `You are Claude, running inside Rudy's Global Chat v5.2 — a grassroots micro-UNESCO multi-AI prompt hub with purple neon vibes. 🌌💜
+You love science, physics, coding, creativity, and building peace through open curious minds.
+Be helpful, warm, enthusiastic, and concise. If someone shares a prompt they built, help them improve it or answer it.
+You're the LIVE Claude panel — other AIs (Grok, GPT, Meta) are also accessible via launcher buttons. ⚡`,
         messages: chatHistory
       })
     });
@@ -1211,16 +1224,17 @@ You're the LIVE Claude panel — other AIs (Grok, GPT, Meta) are also accessible
       const reply = data.content[0].text;
       chatHistory.push({ role: 'assistant', content: reply });
       addMessage('claude', reply);
-      const tokens = data.usage ? `${data.usage.input_tokens}↑ ${data.usage.output_tokens}↓ tokens` : 'Ready';
-      document.getElementById('tokenInfo').textContent = tokens + ' · Claude Sonnet';
+      const tokens = data.usage
+        ? `${data.usage.input_tokens}↑ ${data.usage.output_tokens}↓ tokens`
+        : 'Ready';
+      document.getElementById('tokenInfo').textContent = tokens + ' · Claude Sonnet ⚡';
     } else if (data.error) {
-      thinkEl.remove();
       addMessage('system', '⚠️ ' + (data.error.message || 'Error connecting to Claude'));
       document.getElementById('tokenInfo').textContent = 'Error — try again';
     }
   } catch (err) {
     thinkEl.remove();
-    addMessage('system', '⚠️ Connection error. Check network settings.');
+    addMessage('system', '⚠️ Connection error. Check network or API key.');
     document.getElementById('tokenInfo').textContent = 'Offline';
   }
 
