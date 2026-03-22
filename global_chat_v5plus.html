@@ -283,6 +283,10 @@ body::after {
   color: var(--p3);
   border-bottom: 2px solid var(--p3);
 }
+.cat-tab.active::after {
+  content: ' ✓';
+  font-size: 0.6rem;
+}
 
 .template-area {
   flex: 1;
@@ -1052,77 +1056,102 @@ Length: ${f.length || 'Medium (structured)'}`
 // ════════════════════════════════════════════════════
 //  CATEGORY & TEMPLATE RENDERING
 // ════════════════════════════════════════════════════
-let currentCat = 'science';
+let activeCats = ['science'];
 let builtPrompt = '';
 let chipExtras = [];
 
 function setCategory(cat) {
-  currentCat = cat;
+  // Toggle: add/remove category (always keep at least one active)
+  const idx = activeCats.indexOf(cat);
+  if (idx > -1) {
+    if (activeCats.length === 1) return; // can't deselect last one
+    activeCats.splice(idx, 1);
+  } else {
+    activeCats.push(cat);
+  }
   chipExtras = [];
-  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + cat).classList.add('active');
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    t.classList.toggle('active', activeCats.includes(t.id.replace('tab-', '')));
+  });
   renderTemplate();
 }
 
 function renderTemplate() {
-  const tpl = templates[currentCat];
   const area = document.getElementById('templateArea');
   area.innerHTML = '';
 
-  tpl.fields.forEach(f => {
-    const group = document.createElement('div');
-    group.className = 'field-group';
+  // Render fields from ALL active categories
+  activeCats.forEach(catName => {
+    const tpl = templates[catName];
 
-    const label = document.createElement('div');
-    label.className = 'field-label';
-    label.innerHTML = `${f.label} <span class="req">▸</span>`;
-    group.appendChild(label);
+    // Category section header
+    const header = document.createElement('div');
+    header.className = 'field-label';
+    header.style.cssText = 'margin-top:6px;font-size:0.68rem;color:var(--p3);letter-spacing:3px;border-bottom:1px dashed rgba(155,48,255,0.2);padding-bottom:4px;';
+    header.textContent = '── ' + catName.toUpperCase() + ' ──';
+    area.appendChild(header);
 
-    let el;
-    if (f.type === 'select') {
-      el = document.createElement('select');
-      el.id = 'field_' + f.id;
-      f.options.forEach(o => {
-        const opt = document.createElement('option');
-        opt.value = o; opt.textContent = o;
-        el.appendChild(opt);
-      });
-    } else if (f.type === 'textarea') {
-      el = document.createElement('textarea');
-      el.id = 'field_' + f.id;
-      el.placeholder = f.placeholder || '';
-      el.rows = f.rows || 3;
-    } else {
-      el = document.createElement('input');
-      el.type = 'text';
-      el.id = 'field_' + f.id;
-      el.placeholder = f.placeholder || '';
-    }
+    tpl.fields.forEach(f => {
+      const group = document.createElement('div');
+      group.className = 'field-group';
 
-    el.addEventListener('input', livePreview);
-    group.appendChild(el);
-    area.appendChild(group);
+      const label = document.createElement('div');
+      label.className = 'field-label';
+      label.innerHTML = `${f.label} <span class="req">▸</span>`;
+      group.appendChild(label);
+
+      let el;
+      // Use unique IDs per category to avoid collisions
+      const fieldId = 'field_' + catName + '_' + f.id;
+      if (f.type === 'select') {
+        el = document.createElement('select');
+        el.id = fieldId;
+        // Add blank first option
+        const blank = document.createElement('option');
+        blank.value = ''; blank.textContent = '— select —';
+        el.appendChild(blank);
+        f.options.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o; opt.textContent = o;
+          el.appendChild(opt);
+        });
+      } else if (f.type === 'textarea') {
+        el = document.createElement('textarea');
+        el.id = fieldId;
+        el.placeholder = f.placeholder || '';
+        el.rows = f.rows || 3;
+      } else {
+        el = document.createElement('input');
+        el.type = 'text';
+        el.id = fieldId;
+        el.placeholder = f.placeholder || '';
+      }
+
+      el.addEventListener('input', livePreview);
+      group.appendChild(el);
+      area.appendChild(group);
+    });
+
+    // Chips for this category
+    const chipGroup = document.createElement('div');
+    chipGroup.className = 'field-group';
+    const chipLabel = document.createElement('div');
+    chipLabel.className = 'field-label';
+    chipLabel.innerHTML = '✨ QUICK ADD <span class="req">click to add</span>';
+    chipGroup.appendChild(chipLabel);
+
+    const chipWrap = document.createElement('div');
+    chipWrap.className = 'quick-inserts';
+    tpl.chips.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = c;
+      chip.onclick = () => addChip(c, chip);
+      chipWrap.appendChild(chip);
+    });
+    chipGroup.appendChild(chipWrap);
+    area.appendChild(chipGroup);
   });
-
-  // Chips
-  const chipGroup = document.createElement('div');
-  chipGroup.className = 'field-group';
-  const chipLabel = document.createElement('div');
-  chipLabel.className = 'field-label';
-  chipLabel.innerHTML = '✨ QUICK ADD <span class="req">click to add</span>';
-  chipGroup.appendChild(chipLabel);
-
-  const chipWrap = document.createElement('div');
-  chipWrap.className = 'quick-inserts';
-  tpl.chips.forEach(c => {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = c;
-    chip.onclick = () => addChip(c, chip);
-    chipWrap.appendChild(chip);
-  });
-  chipGroup.appendChild(chipWrap);
-  area.appendChild(chipGroup);
 }
 
 function addChip(text, btn) {
@@ -1140,20 +1169,29 @@ function addChip(text, btn) {
   livePreview();
 }
 
-function getFields() {
-  const tpl = templates[currentCat];
+function getFieldsForCat(catName) {
+  const tpl = templates[catName];
   const vals = {};
   tpl.fields.forEach(f => {
-    const el = document.getElementById('field_' + f.id);
+    const el = document.getElementById('field_' + catName + '_' + f.id);
     if (el) vals[f.id] = el.value;
   });
   return vals;
 }
 
 function livePreview() {
-  const tpl = templates[currentCat];
-  const fields = getFields();
-  let prompt = tpl.build(fields);
+  // Build combined prompt from all active categories, skip blank fields
+  const parts = [];
+  activeCats.forEach(catName => {
+    const tpl = templates[catName];
+    const fields = getFieldsForCat(catName);
+    // Only include this category if at least one field is filled
+    const hasContent = Object.values(fields).some(v => v && v.trim());
+    if (hasContent || activeCats.length === 1) {
+      parts.push(tpl.build(fields));
+    }
+  });
+  let prompt = parts.join('\n\n---\n\n');
   if (chipExtras.length > 0) {
     prompt += '\n\nAdditional requirements: ' + chipExtras.join(', ');
   }
