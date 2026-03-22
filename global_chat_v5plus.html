@@ -824,9 +824,9 @@ select option { background: #0d0520; }
       <span class="live-dot" style="background:var(--grok);"></span> GROK LIVE
     </button>
     <a class="ai-btn grok"  href="https://grok.com"           target="_blank">🤖 Grok.com</a>
+    <a class="ai-btn zchat" href="https://chat.z.ai"          target="_blank" id="zchatLink">⚡ chat.z.ai</a>
     <a class="ai-btn gpt"   href="https://chatgpt.com"        target="_blank">🟢 ChatGPT</a>
     <a class="ai-btn meta"  href="https://meta.ai"            target="_blank">🔵 Meta AI</a>
-    <a class="ai-btn zchat" href="https://z.chat"             target="_blank" id="zchatLink">⚡ z.chat</a>
     <a class="ai-btn"       href="https://gemini.google.com"  target="_blank" style="border-color:#888;color:#888;">♊ Gemini</a>
   </div>
 
@@ -873,9 +873,9 @@ select option { background: #0d0520; }
       <div class="send-strip">
         <button class="send-btn claude" onclick="sendToAI('claude')">💜 Claude.ai</button>
         <button class="send-btn grok"   onclick="sendToAI('grok')">🤖 Grok</button>
+        <button class="send-btn zchat"  onclick="sendToAI('zchat')">⚡ chat.z.ai</button>
         <button class="send-btn gpt"    onclick="sendToAI('gpt')">🟢 GPT</button>
         <button class="send-btn meta"   onclick="sendToAI('meta')">🔵 Meta</button>
-        <button class="send-btn zchat"  onclick="sendToAI('zchat')">⚡ z.chat</button>
       </div>
     </div>
 
@@ -1190,7 +1190,7 @@ function sendToAI(ai) {
     grok:   `https://grok.com/?q=${encoded}`,
     gpt:    `https://chatgpt.com/?q=${encoded}`,
     meta:   `https://meta.ai/?prompt=${encoded}`,
-    zchat:  `https://z.chat/?q=${encoded}`
+    zchat:  `https://chat.z.ai/?q=${encoded}`
   };
   if (urls[ai]) { window.open(urls[ai], '_blank'); showToast(`🚀 Sending to ${ai.toUpperCase()}...`); }
 }
