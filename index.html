@@ -163,12 +163,13 @@ body::after {
 .ai-strip {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 24px;
+  gap: 6px;
+  padding: 5px 24px;
   background: rgba(9,3,22,0.95);
   border-bottom: 1px solid rgba(155,48,255,0.3);
   flex-shrink: 0;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
 }
 
 .ai-strip-label {
@@ -181,18 +182,19 @@ body::after {
 .ai-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: 20px;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 14px;
   border: 1.5px solid;
   background: transparent;
   font-family: 'Share Tech Mono', monospace;
-  font-size: 0.82rem;
+  font-size: 0.72rem;
   font-weight: bold;
   cursor: pointer;
   transition: all 0.22s;
-  letter-spacing: 1px;
+  letter-spacing: 0.5px;
   text-decoration: none;
+  white-space: nowrap;
 }
 
 .ai-btn.claude { border-color: var(--claude); color: var(--claude); }
@@ -282,6 +284,10 @@ body::after {
   background: rgba(155,48,255,0.2);
   color: var(--p3);
   border-bottom: 2px solid var(--p3);
+}
+.cat-tab.active::after {
+  content: ' ✓';
+  font-size: 0.6rem;
 }
 
 .template-area {
@@ -586,6 +592,23 @@ select option { background: #0d0520; }
   border: 1px dashed rgba(0,255,65,0.15);
 }
 
+.msg.grok-ai {
+  background: rgba(0,20,40,0.7);
+  border: 1px solid rgba(0,212,255,0.25);
+  color: #ccf0ff;
+  align-self: flex-start;
+  border-bottom-left-radius: 3px;
+}
+
+.msg.grok-thinking {
+  color: var(--text2);
+  font-style: italic;
+  font-size: 0.78rem;
+  align-self: flex-start;
+  background: rgba(0,10,25,0.5);
+  border: 1px dashed rgba(0,212,255,0.15);
+}
+
 /* Input areas */
 .chat-input-area {
   padding: 12px;
@@ -778,6 +801,115 @@ select option { background: #0d0520; }
   transition: all 0.2s;
 }
 .settings-clear-btn:hover { background: rgba(255,80,80,0.1); box-shadow: 0 0 12px rgba(255,80,80,0.3); }
+
+/* ── MAXIMIZE BUTTON ── */
+.max-btn {
+  background: transparent;
+  border: 1px solid rgba(155,48,255,0.3);
+  border-radius: 4px;
+  color: var(--text2);
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 2px 6px;
+  transition: all 0.2s;
+  margin-left: 6px;
+}
+.max-btn:hover { border-color: var(--p3); color: var(--p3); box-shadow: 0 0 8px var(--glow2); }
+
+/* Maximized panel states */
+.main.maximized-builder .preview-col,
+.main.maximized-builder .live-col { display: none; }
+.main.maximized-builder .builder { width: 100%; border-right: none; }
+
+.main.maximized-preview .builder,
+.main.maximized-preview .live-col { display: none; }
+.main.maximized-preview .preview-col { border-right: none; }
+
+.main.maximized-live .builder,
+.main.maximized-live .preview-col { display: none; }
+.main.maximized-live .live-col { width: 100%; }
+
+/* ── MINIMIZED GLOBAL CHAT WIDGET ── */
+.global-mini {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 500;
+  background: rgba(13,5,32,0.95);
+  border: 1.5px solid var(--p1);
+  border-radius: 14px;
+  box-shadow: 0 0 20px var(--glow);
+  width: 280px;
+  max-height: 320px;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalIn 0.3s ease-out;
+}
+.global-mini.open { display: flex; }
+.global-mini-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(5,1,15,0.9);
+  border-bottom: 1px solid rgba(155,48,255,0.3);
+  font-size: 0.7rem;
+  color: var(--p2);
+  cursor: move;
+}
+.global-mini-msgs {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  max-height: 180px;
+  font-size: 0.75rem;
+}
+.global-mini-msgs::-webkit-scrollbar { width: 3px; }
+.global-mini-msgs::-webkit-scrollbar-thumb { background: var(--p4); border-radius: 3px; }
+.global-mini-input {
+  display: flex;
+  gap: 4px;
+  padding: 6px 8px;
+  border-top: 1px solid rgba(155,48,255,0.2);
+}
+.global-mini-input input {
+  flex: 1;
+  font-size: 0.72rem;
+  padding: 5px 8px;
+}
+.global-mini-input button {
+  padding: 5px 10px;
+  font-size: 0.68rem;
+  background: linear-gradient(135deg, #003300, #006600);
+  border: 1px solid var(--green);
+  border-radius: 6px;
+  color: var(--green);
+  cursor: pointer;
+}
+
+/* Floating restore button when minimized */
+.global-mini-fab {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 499;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--p4), var(--p1));
+  border: 2px solid var(--p3);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 0 20px var(--glow);
+  transition: all 0.2s;
+  align-items: center;
+  justify-content: center;
+}
+.global-mini-fab:hover { transform: scale(1.1); box-shadow: 0 0 30px var(--glow); }
+.global-mini-fab.show { display: flex; }
 </style>
 </head>
 <body>
@@ -797,17 +929,20 @@ select option { background: #0d0520; }
     </div>
   </div>
 
-  <!-- AI LAUNCHER STRIP -->
+  <!-- AI LAUNCHER STRIP (integrated into header row) -->
   <div class="ai-strip">
     <span class="ai-strip-label">LAUNCH →</span>
     <button class="ai-btn live" onclick="scrollToChat()">
-      <span class="live-dot"></span> CLAUDE LIVE
+      <span class="live-dot"></span> CLAUDE
     </button>
-    <a class="ai-btn grok"  href="https://grok.com"           target="_blank">🤖 GROK</a>
-    <a class="ai-btn gpt"   href="https://chatgpt.com"        target="_blank">🟢 ChatGPT</a>
-    <a class="ai-btn meta"  href="https://meta.ai"            target="_blank">🔵 Meta AI</a>
-    <a class="ai-btn zchat" href="https://z.chat"             target="_blank" id="zchatLink">⚡ z.chat</a>
-    <a class="ai-btn"       href="https://gemini.google.com"  target="_blank" style="border-color:#888;color:#888;">♊ Gemini</a>
+    <button class="ai-btn live" onclick="scrollToGrok()" style="border-color:var(--grok);color:var(--grok);animation:none;">
+      <span class="live-dot" style="background:var(--grok);"></span> GROK
+    </button>
+    <a class="ai-btn grok"  href="https://grok.com"           target="_blank">🤖 Grok</a>
+    <a class="ai-btn zchat" href="https://chat.z.ai"          target="_blank" id="zchatLink">⚡ Z</a>
+    <a class="ai-btn gpt"   href="https://chatgpt.com"        target="_blank">🟢 GPT</a>
+    <a class="ai-btn meta"  href="https://meta.ai"            target="_blank">🔵 Meta</a>
+    <a class="ai-btn"       href="https://gemini.google.com"  target="_blank" style="border-color:#888;color:#888;">♊ Gem</a>
   </div>
 
   <!-- MAIN -->
@@ -815,7 +950,10 @@ select option { background: #0d0520; }
 
     <!-- ═══ LEFT: BUILDER ═══ -->
     <div class="builder">
-      <div class="builder-header">✦ PROMPT ARCHITECT</div>
+      <div class="builder-header" style="display:flex;justify-content:space-between;align-items:center;">
+        <span>✦ PROMPT ARCHITECT</span>
+        <button class="max-btn" onclick="toggleMax('builder')" title="Maximize">⤢</button>
+      </div>
 
       <div class="cat-tabs">
         <button class="cat-tab active" onclick="setCategory('science')" id="tab-science">⚛️ SCIENCE</button>
@@ -834,10 +972,13 @@ select option { background: #0d0520; }
     <!-- ═══ CENTER: PREVIEW ═══ -->
     <div class="preview-col">
       <div class="preview-header">
-        <span>✦ LIVE PREVIEW</span>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <span>✦ LIVE PREVIEW <button class="max-btn" onclick="toggleMax('preview')" title="Maximize">⤢</button></span>
+        <div style="display:flex;gap:6px;align-items:center;">
           <span id="charCount" style="font-size:0.7rem;color:var(--text2);">0 chars</span>
           <button class="copy-btn" onclick="copyPrompt()" id="copyBtn">📋 COPY</button>
+          <button class="copy-btn" onclick="savePromptToFile()" title="Save prompt as .txt file">💾 SAVE</button>
+          <button class="copy-btn" onclick="document.getElementById('loadPromptFile').click()" title="Load prompt from file">📂 LOAD</button>
+          <input type="file" id="loadPromptFile" accept=".txt,.md,.json" style="display:none" onchange="loadPromptFromFile(event)">
         </div>
       </div>
 
@@ -853,9 +994,9 @@ select option { background: #0d0520; }
       <div class="send-strip">
         <button class="send-btn claude" onclick="sendToAI('claude')">💜 Claude.ai</button>
         <button class="send-btn grok"   onclick="sendToAI('grok')">🤖 Grok</button>
+        <button class="send-btn zchat"  onclick="sendToAI('zchat')">⚡ chat.z.ai</button>
         <button class="send-btn gpt"    onclick="sendToAI('gpt')">🟢 GPT</button>
         <button class="send-btn meta"   onclick="sendToAI('meta')">🔵 Meta</button>
-        <button class="send-btn zchat"  onclick="sendToAI('zchat')">⚡ z.chat</button>
       </div>
     </div>
 
@@ -864,12 +1005,17 @@ select option { background: #0d0520; }
 
       <!-- Tab bar -->
       <div class="live-tab-bar">
-        <div class="tab-btn active" id="tab-global" onclick="switchTab(0)">🌍 GLOBAL CHAT</div>
-        <div class="tab-btn"        id="tab-claude" onclick="switchTab(1)">💜 CLAUDE LIVE</div>
+        <div class="tab-btn active" id="tab-global" onclick="switchTab(0)">🌍 GLOBAL</div>
+        <div class="tab-btn"        id="tab-claude" onclick="switchTab(1)">💜 CLAUDE</div>
+        <div class="tab-btn"        id="tab-grok"   onclick="switchTab(2)">🤖 GROK</div>
+        <button class="max-btn" onclick="toggleMax('live')" title="Maximize" style="margin:auto 6px auto 0;">⤢</button>
       </div>
 
       <!-- ── GLOBAL CHAT PANEL ── -->
       <div class="tab-panel active" id="global-panel">
+        <div style="display:flex;justify-content:flex-end;padding:4px 8px;background:rgba(5,1,15,0.5);">
+          <button class="max-btn" onclick="minimizeGlobalChat()" title="Minimize to corner">⤡ Mini</button>
+        </div>
         <div class="chat-messages" id="globalMessages">
           <!-- Firebase messages injected here -->
         </div>
@@ -900,8 +1046,30 @@ select option { background: #0d0520; }
           <div class="chat-actions">
             <button class="send-chat-btn" onclick="sendToClaudeLive()" id="sendBtn">⚡ SEND</button>
             <button class="use-prompt-btn" onclick="useBuiltPrompt()">USE PROMPT ↑</button>
+            <button class="use-prompt-btn" onclick="clearClaudeChat()" style="border-color:rgba(255,80,80,0.4);color:#ff6b6b;">🗑️ CLEAR</button>
           </div>
           <div class="token-info" id="tokenInfo">Ready · Powered by Claude Sonnet</div>
+        </div>
+      </div>
+
+      <!-- ── GROK LIVE PANEL ── -->
+      <div class="tab-panel" id="grok-panel">
+        <div class="chat-messages" id="grokMessages">
+          <div class="msg system">🤖 Grok Live — powered by xAI</div>
+          <div class="msg grok-ai">Hey! I'm Grok 🤖 Running inside Rudventur Global Chat — I love science, code, and creative chaos. What's on your mind? ⚡</div>
+        </div>
+
+        <div class="chat-input-area" style="border-color:rgba(0,212,255,0.2);background:rgba(0,5,15,0.6);">
+          <textarea id="grokInput" rows="3"
+            placeholder="Ask Grok anything... or click 'USE PROMPT ↑' to send your built prompt!"
+            onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendToGrokLive();}"></textarea>
+          <div class="chat-actions">
+            <button class="send-chat-btn" onclick="sendToGrokLive()" id="grokSendBtn"
+              style="background:linear-gradient(135deg,#001a33,#003366);border-color:var(--grok);color:var(--grok);">🤖 SEND</button>
+            <button class="use-prompt-btn" onclick="useBuiltPromptGrok()">USE PROMPT ↑</button>
+            <button class="use-prompt-btn" onclick="clearGrokChat()" style="border-color:rgba(255,80,80,0.4);color:#ff6b6b;">🗑️ CLEAR</button>
+          </div>
+          <div class="token-info" id="grokTokenInfo" style="color:rgba(0,212,255,0.4);">Ready · Powered by Grok</div>
         </div>
       </div>
 
@@ -909,6 +1077,26 @@ select option { background: #0d0520; }
 
   </div><!-- end .main -->
 </div><!-- end .wrapper -->
+
+<!-- MINIMIZED GLOBAL CHAT WIDGET -->
+<div class="global-mini" id="globalMini">
+  <div class="global-mini-header">
+    <span>🌍 GLOBAL CHAT</span>
+    <div style="display:flex;gap:4px;">
+      <button class="max-btn" onclick="restoreGlobalChat()" title="Restore to main panel">⤢</button>
+      <button class="max-btn" onclick="closeGlobalMini()" title="Close widget">✕</button>
+    </div>
+  </div>
+  <div class="global-mini-msgs" id="globalMiniMsgs"></div>
+  <div class="global-mini-input">
+    <input type="text" id="globalMiniInput" placeholder="Quick message..."
+      onkeydown="if(event.key==='Enter'){sendGlobalMiniMessage();}">
+    <button onclick="sendGlobalMiniMessage()">🌍</button>
+  </div>
+</div>
+
+<!-- FAB button to open minimized global chat -->
+<button class="global-mini-fab" id="globalMiniFab" onclick="openGlobalMini()" title="Open Global Chat">🌍</button>
 
 <!-- SETTINGS MODAL -->
 <div class="settings-overlay" id="settingsOverlay" onclick="if(event.target===this)closeSettingsModal()">
@@ -930,6 +1118,15 @@ select option { background: #0d0520; }
       <div class="settings-actions">
         <button class="settings-save-btn" onclick="saveKeys()">💾 Save to this session</button>
         <button class="settings-clear-btn" onclick="clearKeys()">🗑️ Clear all keys</button>
+      </div>
+      <div style="border-top:1px dashed rgba(155,48,255,0.3);padding-top:14px;margin-top:4px;">
+        <div class="field-label" style="margin-bottom:8px;">📦 SESSION DATA</div>
+        <div class="settings-actions">
+          <button class="settings-save-btn" onclick="exportSession()" style="font-size:0.75rem;">📤 Export Session</button>
+          <button class="settings-save-btn" onclick="document.getElementById('importSessionFile').click()" style="font-size:0.75rem;background:linear-gradient(135deg,#003366,#006699);">📥 Import Session</button>
+          <input type="file" id="importSessionFile" accept=".json" style="display:none" onchange="importSession(event)">
+        </div>
+        <div style="font-size:0.65rem;color:var(--text2);margin-top:6px;text-align:center;">Export saves chat history, prompt, and settings (not API keys)</div>
       </div>
     </div>
   </div>
@@ -1009,77 +1206,102 @@ Length: ${f.length || 'Medium (structured)'}`
 // ════════════════════════════════════════════════════
 //  CATEGORY & TEMPLATE RENDERING
 // ════════════════════════════════════════════════════
-let currentCat = 'science';
+let activeCats = ['science'];
 let builtPrompt = '';
 let chipExtras = [];
 
 function setCategory(cat) {
-  currentCat = cat;
+  // Toggle: add/remove category (always keep at least one active)
+  const idx = activeCats.indexOf(cat);
+  if (idx > -1) {
+    if (activeCats.length === 1) return; // can't deselect last one
+    activeCats.splice(idx, 1);
+  } else {
+    activeCats.push(cat);
+  }
   chipExtras = [];
-  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('tab-' + cat).classList.add('active');
+  document.querySelectorAll('.cat-tab').forEach(t => {
+    t.classList.toggle('active', activeCats.includes(t.id.replace('tab-', '')));
+  });
   renderTemplate();
 }
 
 function renderTemplate() {
-  const tpl = templates[currentCat];
   const area = document.getElementById('templateArea');
   area.innerHTML = '';
 
-  tpl.fields.forEach(f => {
-    const group = document.createElement('div');
-    group.className = 'field-group';
+  // Render fields from ALL active categories
+  activeCats.forEach(catName => {
+    const tpl = templates[catName];
 
-    const label = document.createElement('div');
-    label.className = 'field-label';
-    label.innerHTML = `${f.label} <span class="req">▸</span>`;
-    group.appendChild(label);
+    // Category section header
+    const header = document.createElement('div');
+    header.className = 'field-label';
+    header.style.cssText = 'margin-top:6px;font-size:0.68rem;color:var(--p3);letter-spacing:3px;border-bottom:1px dashed rgba(155,48,255,0.2);padding-bottom:4px;';
+    header.textContent = '── ' + catName.toUpperCase() + ' ──';
+    area.appendChild(header);
 
-    let el;
-    if (f.type === 'select') {
-      el = document.createElement('select');
-      el.id = 'field_' + f.id;
-      f.options.forEach(o => {
-        const opt = document.createElement('option');
-        opt.value = o; opt.textContent = o;
-        el.appendChild(opt);
-      });
-    } else if (f.type === 'textarea') {
-      el = document.createElement('textarea');
-      el.id = 'field_' + f.id;
-      el.placeholder = f.placeholder || '';
-      el.rows = f.rows || 3;
-    } else {
-      el = document.createElement('input');
-      el.type = 'text';
-      el.id = 'field_' + f.id;
-      el.placeholder = f.placeholder || '';
-    }
+    tpl.fields.forEach(f => {
+      const group = document.createElement('div');
+      group.className = 'field-group';
 
-    el.addEventListener('input', livePreview);
-    group.appendChild(el);
-    area.appendChild(group);
+      const label = document.createElement('div');
+      label.className = 'field-label';
+      label.innerHTML = `${f.label} <span class="req">▸</span>`;
+      group.appendChild(label);
+
+      let el;
+      // Use unique IDs per category to avoid collisions
+      const fieldId = 'field_' + catName + '_' + f.id;
+      if (f.type === 'select') {
+        el = document.createElement('select');
+        el.id = fieldId;
+        // Add blank first option
+        const blank = document.createElement('option');
+        blank.value = ''; blank.textContent = '— select —';
+        el.appendChild(blank);
+        f.options.forEach(o => {
+          const opt = document.createElement('option');
+          opt.value = o; opt.textContent = o;
+          el.appendChild(opt);
+        });
+      } else if (f.type === 'textarea') {
+        el = document.createElement('textarea');
+        el.id = fieldId;
+        el.placeholder = f.placeholder || '';
+        el.rows = f.rows || 3;
+      } else {
+        el = document.createElement('input');
+        el.type = 'text';
+        el.id = fieldId;
+        el.placeholder = f.placeholder || '';
+      }
+
+      el.addEventListener('input', livePreview);
+      group.appendChild(el);
+      area.appendChild(group);
+    });
+
+    // Chips for this category
+    const chipGroup = document.createElement('div');
+    chipGroup.className = 'field-group';
+    const chipLabel = document.createElement('div');
+    chipLabel.className = 'field-label';
+    chipLabel.innerHTML = '✨ QUICK ADD <span class="req">click to add</span>';
+    chipGroup.appendChild(chipLabel);
+
+    const chipWrap = document.createElement('div');
+    chipWrap.className = 'quick-inserts';
+    tpl.chips.forEach(c => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.textContent = c;
+      chip.onclick = () => addChip(c, chip);
+      chipWrap.appendChild(chip);
+    });
+    chipGroup.appendChild(chipWrap);
+    area.appendChild(chipGroup);
   });
-
-  // Chips
-  const chipGroup = document.createElement('div');
-  chipGroup.className = 'field-group';
-  const chipLabel = document.createElement('div');
-  chipLabel.className = 'field-label';
-  chipLabel.innerHTML = '✨ QUICK ADD <span class="req">click to add</span>';
-  chipGroup.appendChild(chipLabel);
-
-  const chipWrap = document.createElement('div');
-  chipWrap.className = 'quick-inserts';
-  tpl.chips.forEach(c => {
-    const chip = document.createElement('button');
-    chip.className = 'chip';
-    chip.textContent = c;
-    chip.onclick = () => addChip(c, chip);
-    chipWrap.appendChild(chip);
-  });
-  chipGroup.appendChild(chipWrap);
-  area.appendChild(chipGroup);
 }
 
 function addChip(text, btn) {
@@ -1097,20 +1319,29 @@ function addChip(text, btn) {
   livePreview();
 }
 
-function getFields() {
-  const tpl = templates[currentCat];
+function getFieldsForCat(catName) {
+  const tpl = templates[catName];
   const vals = {};
   tpl.fields.forEach(f => {
-    const el = document.getElementById('field_' + f.id);
+    const el = document.getElementById('field_' + catName + '_' + f.id);
     if (el) vals[f.id] = el.value;
   });
   return vals;
 }
 
 function livePreview() {
-  const tpl = templates[currentCat];
-  const fields = getFields();
-  let prompt = tpl.build(fields);
+  // Build combined prompt from all active categories, skip blank fields
+  const parts = [];
+  activeCats.forEach(catName => {
+    const tpl = templates[catName];
+    const fields = getFieldsForCat(catName);
+    // Only include this category if at least one field is filled
+    const hasContent = Object.values(fields).some(v => v && v.trim());
+    if (hasContent || activeCats.length === 1) {
+      parts.push(tpl.build(fields));
+    }
+  });
+  let prompt = parts.join('\n\n---\n\n');
   if (chipExtras.length > 0) {
     prompt += '\n\nAdditional requirements: ' + chipExtras.join(', ');
   }
@@ -1139,6 +1370,31 @@ function copyPrompt() {
   });
 }
 
+function savePromptToFile() {
+  if (!builtPrompt) { showToast('⚠️ Build a prompt first!'); return; }
+  const blob = new Blob([builtPrompt], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rudventur-prompt-' + new Date().toISOString().slice(0,10) + '.txt';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  showToast('💾 Prompt saved to file!');
+}
+
+function loadPromptFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    builtPrompt = e.target.result;
+    document.getElementById('promptPreview').textContent = builtPrompt;
+    document.getElementById('charCount').textContent = builtPrompt.length + ' chars';
+    showToast('📂 Prompt loaded from file!');
+  };
+  reader.readAsText(file);
+  event.target.value = ''; // reset so same file can be loaded again
+}
+
 function sendToAI(ai) {
   if (!builtPrompt) { livePreview(); if (!builtPrompt) { showToast('⚠️ Build a prompt first!'); return; } }
   const encoded = encodeURIComponent(builtPrompt);
@@ -1147,7 +1403,7 @@ function sendToAI(ai) {
     grok:   `https://grok.com/?q=${encoded}`,
     gpt:    `https://chatgpt.com/?q=${encoded}`,
     meta:   `https://meta.ai/?prompt=${encoded}`,
-    zchat:  `https://z.chat/?q=${encoded}`
+    zchat:  `https://chat.z.ai/?q=${encoded}`
   };
   if (urls[ai]) { window.open(urls[ai], '_blank'); showToast(`🚀 Sending to ${ai.toUpperCase()}...`); }
 }
@@ -1172,6 +1428,11 @@ function useBuiltPrompt() {
 function scrollToChat() {
   switchTab(1);
   document.getElementById('chatInput').focus();
+}
+
+function scrollToGrok() {
+  switchTab(2);
+  document.getElementById('grokInput').focus();
 }
 
 async function sendToClaudeLive() {
@@ -1253,13 +1514,196 @@ function addMessage(type, text) {
 }
 
 // ════════════════════════════════════════════════════
+//  GROK LIVE CHAT
+// ════════════════════════════════════════════════════
+let grokHistory = [];
+let grokThinking = false;
+
+function useBuiltPromptGrok() {
+  livePreview();
+  if (!builtPrompt) { showToast('⚠️ Build a prompt first!'); return; }
+  document.getElementById('grokInput').value = builtPrompt;
+  showToast('🤖 Prompt loaded into Grok chat!');
+}
+
+function addGrokMessage(type, text) {
+  const msgs = document.getElementById('grokMessages');
+  const el = document.createElement('div');
+  el.className = `msg ${type}`;
+  el.textContent = text;
+  msgs.appendChild(el);
+  msgs.scrollTop = msgs.scrollHeight;
+  return el;
+}
+
+// ── Clear Chat functions ──
+function clearClaudeChat() {
+  chatHistory = [];
+  const msgs = document.getElementById('chatMessages');
+  msgs.innerHTML = '<div class="msg system">🌌 Chat cleared — fresh start! ⚡</div>';
+  document.getElementById('tokenInfo').textContent = 'Ready · Powered by Claude Sonnet';
+  showToast('💜 Claude chat cleared!');
+}
+
+function clearGrokChat() {
+  grokHistory = [];
+  const msgs = document.getElementById('grokMessages');
+  msgs.innerHTML = '<div class="msg system">🤖 Chat cleared — fresh start! ⚡</div>';
+  document.getElementById('grokTokenInfo').textContent = 'Ready · Powered by Grok';
+  showToast('🤖 Grok chat cleared!');
+}
+
+async function sendToGrokLive() {
+  const grokKey = localStorage.getItem('grokApiKey');
+  if (!grokKey) {
+    showToast('⚙️ Please add your Grok API key in settings first 🤖');
+    openSettingsModal();
+    return;
+  }
+
+  const input = document.getElementById('grokInput');
+  const msg = input.value.trim();
+  if (!msg || grokThinking) return;
+
+  input.value = '';
+  input.focus();
+  grokThinking = true;
+  document.getElementById('grokSendBtn').disabled = true;
+  document.getElementById('grokTokenInfo').textContent = 'Thinking... 🤖';
+
+  addGrokMessage('user', msg);
+  grokHistory.push({ role: 'user', content: msg });
+
+  const thinkEl = addGrokMessage('grok-thinking', '● ● ● thinking...');
+
+  try {
+    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${grokKey}`
+      },
+      body: JSON.stringify({
+        model: 'grok-3-latest',
+        messages: [
+          {
+            role: 'system',
+            content: `You are Grok, running inside Rudy's Global Chat v5.2 — a grassroots micro-UNESCO multi-AI prompt hub with neon cyberpunk vibes. 🤖⚡
+You love science, physics, coding, creativity, memes, and building peace through open curious minds.
+Be helpful, warm, witty, and concise. You're the Grok Live panel — Claude, GPT, and Meta are also accessible here.`
+          },
+          ...grokHistory
+        ],
+        max_tokens: 4096
+      })
+    });
+
+    const data = await response.json();
+    thinkEl.remove();
+
+    if (data.choices && data.choices[0]) {
+      const reply = data.choices[0].message.content;
+      grokHistory.push({ role: 'assistant', content: reply });
+      addGrokMessage('grok-ai', reply);
+      const tokens = data.usage
+        ? `${data.usage.prompt_tokens}↑ ${data.usage.completion_tokens}↓ tokens`
+        : 'Ready';
+      document.getElementById('grokTokenInfo').textContent = tokens + ' · Grok ⚡';
+    } else if (data.error) {
+      addGrokMessage('system', '⚠️ ' + (data.error.message || 'Error connecting to Grok'));
+      document.getElementById('grokTokenInfo').textContent = 'Error — try again';
+    }
+  } catch (err) {
+    thinkEl.remove();
+    addGrokMessage('system', '⚠️ Connection error. Check network or API key.');
+    document.getElementById('grokTokenInfo').textContent = 'Offline';
+  }
+
+  grokThinking = false;
+  document.getElementById('grokSendBtn').disabled = false;
+}
+
+// ════════════════════════════════════════════════════
 //  TAB SWITCHING
 // ════════════════════════════════════════════════════
 function switchTab(n) {
-  document.getElementById('global-panel').classList.toggle('active', n === 0);
-  document.getElementById('claude-panel').classList.toggle('active', n === 1);
-  document.getElementById('tab-global').classList.toggle('active', n === 0);
-  document.getElementById('tab-claude').classList.toggle('active', n === 1);
+  const panels = ['global-panel', 'claude-panel', 'grok-panel'];
+  const tabs = ['tab-global', 'tab-claude', 'tab-grok'];
+  panels.forEach((id, i) => document.getElementById(id).classList.toggle('active', n === i));
+  tabs.forEach((id, i) => document.getElementById(id).classList.toggle('active', n === i));
+}
+
+// ════════════════════════════════════════════════════
+//  MAXIMIZE PANELS
+// ════════════════════════════════════════════════════
+function toggleMax(panel) {
+  const main = document.querySelector('.main');
+  const cls = 'maximized-' + panel;
+  if (main.classList.contains(cls)) {
+    main.classList.remove(cls);
+  } else {
+    // Remove any other maximized state first
+    main.classList.remove('maximized-builder', 'maximized-preview', 'maximized-live');
+    main.classList.add(cls);
+  }
+}
+
+// ════════════════════════════════════════════════════
+//  GLOBAL CHAT MINIMIZE/RESTORE
+// ════════════════════════════════════════════════════
+let globalMinimized = false;
+
+function minimizeGlobalChat() {
+  globalMinimized = true;
+  // Switch to Claude tab since Global is being minimized
+  switchTab(1);
+  // Show the FAB
+  document.getElementById('globalMiniFab').classList.add('show');
+  showToast('🌍 Global Chat minimized — click 🌍 in corner to reopen');
+}
+
+function openGlobalMini() {
+  document.getElementById('globalMiniFab').classList.remove('show');
+  document.getElementById('globalMini').classList.add('open');
+  // Mirror messages from main global chat
+  syncMiniMessages();
+}
+
+function closeGlobalMini() {
+  document.getElementById('globalMini').classList.remove('open');
+  document.getElementById('globalMiniFab').classList.add('show');
+}
+
+function restoreGlobalChat() {
+  globalMinimized = false;
+  document.getElementById('globalMini').classList.remove('open');
+  document.getElementById('globalMiniFab').classList.remove('show');
+  switchTab(0);
+  showToast('🌍 Global Chat restored!');
+}
+
+function syncMiniMessages() {
+  const src = document.getElementById('globalMessages');
+  const dst = document.getElementById('globalMiniMsgs');
+  dst.innerHTML = src.innerHTML;
+  dst.scrollTop = dst.scrollHeight;
+}
+
+function sendGlobalMiniMessage() {
+  const input = document.getElementById('globalMiniInput');
+  const text = input.value.trim();
+  if (!text) return;
+  if (window.lastSend && Date.now() - window.lastSend < 2000) return;
+  window.lastSend = Date.now();
+  messagesRef.push({
+    username: document.getElementById('usernameInput').value || currentUsername,
+    text: text,
+    timestamp: Date.now(),
+    sessionId: sessionId
+  });
+  input.value = '';
+  // Sync after a short delay
+  setTimeout(syncMiniMessages, 500);
 }
 
 // ════════════════════════════════════════════════════
@@ -1308,6 +1752,60 @@ function clearKeys() {
   document.getElementById('claudeKeyInput').placeholder = 'sk-ant-...';
   document.getElementById('grokKeyInput').placeholder = 'xai-...';
   showToast('🗑️ All API keys cleared!');
+}
+
+// ── Session export/import ──
+function exportSession() {
+  const session = {
+    version: 'v5.2',
+    timestamp: new Date().toISOString(),
+    activeCats: activeCats,
+    builtPrompt: builtPrompt,
+    chipExtras: chipExtras,
+    claudeHistory: chatHistory,
+    grokHistory: grokHistory,
+    username: document.getElementById('usernameInput').value
+  };
+  const blob = new Blob([JSON.stringify(session, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'rudventur-session-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+  closeSettingsModal();
+  showToast('📤 Session exported!');
+}
+
+function importSession(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const session = JSON.parse(e.target.result);
+      if (session.activeCats) { activeCats = session.activeCats; }
+      if (session.builtPrompt) {
+        builtPrompt = session.builtPrompt;
+        document.getElementById('promptPreview').textContent = builtPrompt;
+        document.getElementById('charCount').textContent = builtPrompt.length + ' chars';
+      }
+      if (session.chipExtras) { chipExtras = session.chipExtras; }
+      if (session.claudeHistory) { chatHistory = session.claudeHistory; }
+      if (session.grokHistory) { grokHistory = session.grokHistory; }
+      if (session.username) { document.getElementById('usernameInput').value = session.username; }
+      // Re-render tabs and template
+      document.querySelectorAll('.cat-tab').forEach(t => {
+        t.classList.toggle('active', activeCats.includes(t.id.replace('tab-', '')));
+      });
+      renderTemplate();
+      closeSettingsModal();
+      showToast('📥 Session imported! ⚡');
+    } catch (err) {
+      showToast('⚠️ Invalid session file');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
 }
 
 // Close modal on Escape key
@@ -1376,6 +1874,7 @@ function sendGlobalMessage() {
     sessionId: sessionId
   });
   input.value = '';
+  input.focus();
 }
 
 function sendBuiltPromptToGlobal() {
