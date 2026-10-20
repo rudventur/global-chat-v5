@@ -8,6 +8,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://rudventur.github.io/RudVentur.com/popcoin/config.js"></script>
 
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
@@ -918,6 +919,7 @@ select option { background: #0d0520; }
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="/RudVentur.com/embed/apple-touch-icon.png">
 <script src="https://rudventur.github.io/RudVentur.com/embed/rvView.js"></script>
+<script src="https://rudventur.github.io/RudVentur.com/embed/useRbox.js" data-service="global-chat-v5"></script>
 </head>
 <body>
 
@@ -1024,7 +1026,7 @@ select option { background: #0d0520; }
           <button class="max-btn" onclick="minimizeGlobalChat()" title="Minimize to corner">⤡ Mini</button>
         </div>
         <div class="chat-messages" id="globalMessages">
-          <!-- Firebase messages injected here -->
+          <!-- messages from chat/global (shared RUDVENTUR Firebase project) -->
         </div>
 
         <div class="chat-input-area">
@@ -1821,65 +1823,85 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ════════════════════════════════════════════════════
-//  FIREBASE SETUP — paste your config here
+//  FIREBASE — the shared RUDVENTUR project
+//  The web config is the PopCOIN project's (popcoin/config.js on RudVentur.com, loaded
+//  above as window.POPCOIN_FIREBASE), the same database the useRbox uses for rooms and
+//  channels. Messages go to chat/global; the rules (RudVentur.com
+//  popcoin/database.rules.json, "chat") let signed-in visitors read and post, only as
+//  themselves, 500 characters at most, and nobody can change or delete a message.
 // ════════════════════════════════════════════════════
-const firebaseConfig = {
-  // ←←← PASTE YOUR FIREBASE CONFIG HERE ←←←
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-};
+const chatApp = window.POPCOIN_FIREBASE
+  ? (firebase.apps.find(a => a.name === 'globalchat') || firebase.initializeApp(window.POPCOIN_FIREBASE, 'globalchat'))
+  : null;
+const auth = chatApp ? chatApp.auth() : null;
+const db = chatApp ? chatApp.database() : null;
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.database();
-
-// Session & username
+// Session & username (the useRbox profile name when there is one)
 let sessionId = localStorage.getItem('rudventurSession') || crypto.randomUUID();
 localStorage.setItem('rudventurSession', sessionId);
 
-let currentUsername = localStorage.getItem('rudventurUsername') || '';
+function profileName() {
+  try { const p = window.rvUserbox && window.rvUserbox.get(); if (p && p.username) return String(p.username); } catch (e) {}
+  return '';
+}
+let currentUsername = profileName() || localStorage.getItem('rudventurUsername') || '';
 if (!currentUsername) {
   currentUsername = prompt("Enter your temp nickname (no account needed):") || "Anon" + Math.floor(Math.random()*999);
   localStorage.setItem('rudventurUsername', currentUsername);
 }
 document.getElementById('usernameInput').value = currentUsername;
 
-auth.signInAnonymously().catch(err => console.log("Anon auth ok"));
+let chatUid = null;
+const chatReady = new Promise((resolve, reject) => {
+  if (!auth) { reject(new Error('no config')); return; }
+  auth.onAuthStateChanged(user => { if (user) { chatUid = user.uid; resolve(user.uid); } });
+  auth.signInAnonymously().catch(reject);
+});
 
 // ════════════════════════════════════════════════════
 //  GLOBAL CHAT (Firebase)
 // ════════════════════════════════════════════════════
-const messagesRef = db.ref('messages/global');
+const messagesRef = db ? db.ref('chat/global') : null;
+
+function chatNote(text) {
+  const container = document.getElementById('globalMessages');
+  const el = document.createElement('div');
+  el.className = 'msg system';
+  el.textContent = text;
+  container.appendChild(el);
+  container.scrollTop = container.scrollHeight;
+}
 
 function loadMessages() {
   const container = document.getElementById('globalMessages');
   container.innerHTML = '<div class="msg system">🌍 Public room open — everyone can see & speak</div>';
-
-  messagesRef.on('child_added', (snapshot) => {
-    const msg = snapshot.val();
-    const el = document.createElement('div');
-    el.className = 'msg claude';
-    el.innerHTML = `<strong>${msg.username}</strong>: ${msg.text}<br><small style="opacity:0.5">${new Date(msg.timestamp).toLocaleTimeString()}</small>`;
-    container.appendChild(el);
-    container.scrollTop = container.scrollHeight;
-  });
+  chatReady.then(() => {
+    messagesRef.orderByChild('ts').limitToLast(200).on('child_added', (snapshot) => {
+      const msg = snapshot.val() || {};
+      const el = document.createElement('div');
+      el.className = 'msg ' + (msg.uid === chatUid ? 'user' : 'claude');
+      const who = document.createElement('strong'); who.textContent = msg.name || 'anon';
+      const time = document.createElement('small'); time.style.opacity = '0.5';
+      time.textContent = msg.ts ? new Date(msg.ts).toLocaleTimeString() : '';
+      el.appendChild(who); el.appendChild(document.createTextNode(': ' + (msg.text || '')));
+      el.appendChild(document.createElement('br')); el.appendChild(time);
+      container.appendChild(el);
+      container.scrollTop = container.scrollHeight;
+    }, err => chatNote('⚠️ The chat could not be read: ' + (err.code || err.message)));
+  }, err => chatNote('⚠️ Offline — the global chat needs a connection (' + err.message + ')'));
 }
 
 function sendGlobalMessage() {
   const input = document.getElementById('globalInput');
-  const text = input.value.trim();
+  const text = input.value.trim().slice(0, 500);
   if (!text) return;
+  if (!chatUid) { chatNote('⏳ Still connecting to the chat, try again in a moment'); return; }
   if (window.lastSend && Date.now() - window.lastSend < 2000) return;
   window.lastSend = Date.now();
-
-  messagesRef.push({
-    username: document.getElementById('usernameInput').value || currentUsername,
-    text: text,
-    timestamp: Date.now(),
-    sessionId: sessionId
-  });
+  const name = (document.getElementById('usernameInput').value || currentUsername).trim().slice(0, 30) || 'anon';
+  localStorage.setItem('rudventurUsername', name);
+  messagesRef.push({ name, text, ts: firebase.database.ServerValue.TIMESTAMP, uid: chatUid })
+    .catch(err => chatNote('⚠️ Not sent: ' + (err.code || err.message)));
   input.value = '';
   input.focus();
 }
@@ -1887,7 +1909,7 @@ function sendGlobalMessage() {
 function sendBuiltPromptToGlobal() {
   if (!builtPrompt) { livePreview(); }
   if (!builtPrompt) return;
-  document.getElementById('globalInput').value = "📢 Built prompt:\n" + builtPrompt.substring(0, 400) + "...";
+  document.getElementById('globalInput').value = ("📢 Built prompt:\n" + builtPrompt).slice(0, 497) + (builtPrompt.length > 480 ? "..." : "");
   sendGlobalMessage();
 }
 
